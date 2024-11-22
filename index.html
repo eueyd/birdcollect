@@ -321,50 +321,51 @@
           }
 
           // 更新小鸟位置
-          function updateBirds() {
-            birds.forEach(bird => {
-              if (!bird.collected) {
-                bird.x += bird.velocity.x;
-                bird.y += bird.velocity.y;
-                
-                // 重力效果
-                bird.velocity.y += 0.1;
-                
-                // 地面碰撞
-                if (bird.y > canvas.height - 20) {
-                  bird.y = canvas.height - 20;
-                  bird.velocity.y = 0;
-                  bird.velocity.x *= 0.8;
-                }
-                
-                // 检查是否进入簸箕
-                if (bird.x > dustpan.x && 
-                    bird.x < dustpan.x + dustpan.width && 
-                    bird.y > dustpan.y && 
-                    bird.y < dustpan.y + dustpan.height) {
-                  bird.collected = true;
-                  if (Math.random() < 0.5) { // 50%概率留在簸箕
-                      dustpan.birds.push({...bird});
-                      score++;
-                      scoreElement.textContent = '簸箕里的小鸟: ' + score;
-                  } else { // 50%概率飞走
-                      bird.state = birdStates.FLYING;
-                      bird.velocity.y = -8;
-                      bird.velocity.x = (Math.random() - 0.5) * 6;
-                      setTimeout(() => {
-                          const index = birds.indexOf(bird);
-                          if (index > -1) {
-                              birds.splice(index, 1);
-                          }
-                      }, 1000);
-                      // 更新动画
-                      updateBirdAnimation(bird);
-                  }
-                                 
-                  
-             
+          // 更新小鸟位置
+function updateBirds() {
+  birds.forEach(bird => {
+    if (!bird.collected) {
+      bird.x += bird.velocity.x;
+      bird.y += bird.velocity.y;
+      
+      // 重力效果
+      bird.velocity.y += 0.1;
+      
+      // 地面碰撞
+      if (bird.y > canvas.height - 20) {
+        bird.y = canvas.height - 20;
+        bird.velocity.y = 0;
+        bird.velocity.x *= 0.8;
+      }
+      
+      // 检查是否进入簸箕
+      if (bird.x > dustpan.x && 
+          bird.x < dustpan.x + dustpan.width && 
+          bird.y > dustpan.y && 
+          bird.y < dustpan.y + dustpan.height) {
+        bird.collected = true;
+        if (Math.random() < 0.5) { // 50%概率留在簸箕
+          dustpan.birds.push({...bird});
+          score++;
+          scoreElement.textContent = '簸箕里的小鸟: ' + score;
+        } else { // 50%概率飞走
+          bird.state = birdStates.FLYING;
+          bird.velocity.y = -8;
+          bird.velocity.x = (Math.random() - 0.5) * 6;
+          setTimeout(() => {
+            const index = birds.indexOf(bird);
+            if (index > -1) {
+              birds.splice(index, 1);
+            }
+          }, 1000);
+        }
+      }
 
-
+      // 更新动画
+      updateBirdAnimation(bird);
+    }
+  });
+}
           function spawnNewBird() {
               // 根据概率分布选择状态
               let selectedState;
