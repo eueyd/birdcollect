@@ -1,156 +1,157 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>扫地收集小鸟</title>
-    <style>
-        canvas {
-            border: 2px solid black;
-            background: #87CEEB;
-        }
-        #gameContainer {
-            text-align: center;
-            padding: 20px;
-        }
-        #score {
-            font-size: 24px;
-            margin: 10px;
-        }
-    </style>
-</head>
-<body>
-    <div id="gameContainer">
-        <div id="score">簸箕里的小鸟: 0</div>
-        <canvas id="gameCanvas" width="800" height="400"></canvas>
-    </div>
+    <head>
+        <title>扫地收集小鸟</title>
+        <style>
+            canvas {
+                border: 2px solid black;
+                background: #87CEEB;
+            }
+            
+            #gameContainer {
+                text-align: center;
+                padding: 20px;
+            }
+            
+            #score {
+                font-size: 24px;
+                margin: 10px;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="gameContainer">
+            <div id="score">簸箕里的小鸟: 0</div>
+            <canvas id="gameCanvas" width="800" height="400"></canvas>
+        </div>
 
-    <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const scoreElement = document.getElementById('score');
+        <script>
+          const canvas = document.getElementById('gameCanvas');
+          const ctx = canvas.getContext('2d');
+          const scoreElement = document.getElementById('score');
 
-        // 游戏状态
-        let score = 0;
-        let sweepAngle = 0;
-        let isSweeping = false;
+          // 游戏状态
+          let score = 0;
+          let sweepAngle = 0;
+          let isSweeping = false;
 
-        // 小鸟样式
-        // 小鸟样式定义
-const birdStyles = [
-    {   // 黄色系
-        bodyColor: '#FFE769',
-        wingColor: '#FFD700',
-        bellyColor: '#FFF4B5',
-        beakColor: '#FF8C00',
-        eyeColor: '#000000',
-        size: 20,
-        type: 'yellow'
-    },
-    {   // 红色系
-        bodyColor: '#FF6B6B',
-        wingColor: '#FF4040',
-        bellyColor: '#FFB6B6',
-        beakColor: '#FF4500',
-        eyeColor: '#000000',
-        size: 22,
-        type: 'red'
-    },
-    {   // 灰色系
-        bodyColor: '#A9A9A9',
-        wingColor: '#808080',
-        bellyColor: '#D3D3D3',
-        beakColor: '#696969',
-        eyeColor: '#000000',
-        size: 19,
-        type: 'gray'
-    },
-    {   // 白色系
-        bodyColor: '#FFFFFF',
-        wingColor: '#F0F0F0',
-        bellyColor: '#FFFAFA',
-        beakColor: '#FFA07A',
-        eyeColor: '#000000',
-        size: 21,
-        type: 'white'
-    }
-];
+          // 小鸟样式定义
+          const birdStyles = [
+            {   // 黄色系
+              bodyColor: '#FFE769',
+              wingColor: '#FFD700',
+              bellyColor: '#FFF4B5',
+              beakColor: '#FF8C00',
+              eyeColor: '#000000',
+              size: 20,
+              type: 'yellow'
+            },
+            {   // 红色系
+              bodyColor: '#FF6B6B',
+              wingColor: '#FF4040',
+              bellyColor: '#FFB6B6',
+              beakColor: '#FF4500',
+              eyeColor: '#000000',
+              size: 22,
+              type: 'red'
+            },
+            {   // 灰色系
+              bodyColor: '#A9A9A9',
+              wingColor: '#808080',
+              bellyColor: '#D3D3D3',
+              beakColor: '#696969',
+              eyeColor: '#000000',
+              size: 19,
+              type: 'gray'
+            },
+            {   // 白色系
+              bodyColor: '#FFFFFF',
+              wingColor: '#F0F0F0',
+              bellyColor: '#FFFAFA',
+              beakColor: '#FFA07A',
+              eyeColor: '#000000',
+              size: 21,
+              type: 'white'
+            }
+          ];
 
-// 小鸟状态定义
-const birdStates = {
-    IDLE: 'idle',         // 静止
-    HOPPING: 'hopping',   // 跳动
-    RUNNING: 'running',   // 跑动
-    FLYING: 'flying'      // 起飞
-};
+          // 小鸟状态定义
+          const birdStates = {
+            IDLE: 'idle',         // 静止
+            HOPPING: 'hopping',   // 跳动
+            RUNNING: 'running',   // 跑动
+            FLYING: 'flying'      // 起飞
+          };
 
-// 状态分布概率表（总和为10）
-const stateDistribution = {
-    [birdStates.IDLE]: 1,    // 10%
-    [birdStates.HOPPING]: 2, // 20%
-    [birdStates.RUNNING]: 3, // 30%
-    [birdStates.FLYING]: 4   // 40%
-};
-        // 扫把对象
-        let broom = {
+          // 状态分布概率表（总和为10）
+          const stateDistribution = {
+            [birdStates.IDLE]: 1,    // 10%
+            [birdStates.HOPPING]: 2, // 20%
+            [birdStates.RUNNING]: 3, // 30%
+            [birdStates.FLYING]: 4   // 40%
+          };
+
+          // 扫把对象
+          let broom = {
             x: canvas.width / 2,
             y: canvas.height - 60,
             width: 60,
             height: 8,
             speed: 5,
             angle: 0
-        };
+          };
 
-        // 簸箕对象
-        let dustpan = {
+          // 簸箕对象
+          let dustpan = {
             x: canvas.width - 150,
             y: canvas.height - 40,
             width: 80,
             height: 35,
             birds: [] // 存储在簸箕中的小鸟
-        };
+          };
 
-        // 小鸟数组
-        let birds = [];
-        const BIRD_COUNT = 5;
+          // 小鸟数组
+          let birds = [];
+          const BIRD_COUNT = 5;
 
-        // 初始化小鸟
-        // 初始化小鸟
-        function createBirds() {
-          for (let i = 0; i < BIRD_COUNT; i++) {
-        // 根据概率分布选择状态
-        let selectedState;
-        const random = Math.random() * 10;
-        let accumulator = 0;
-        
-        for (const [state, probability] of Object.entries(stateDistribution)) {
-            accumulator += probability;
-            if (random < accumulator) {
-                selectedState = state;
-                break;
+          // 初始化小鸟
+          function createBirds() {
+            for (let i = 0; i < BIRD_COUNT; i++) {
+              // 根据概率分布选择状态
+              let selectedState;
+              const random = Math.random() * 10;
+              let accumulator = 0;
+              
+              for (const [state, probability] of Object.entries(stateDistribution)) {
+                accumulator += probability;
+                if (random < accumulator) {
+                  selectedState = state;
+                  break;
+                }
+              }
+
+              // 随机选择样式
+              const style = birdStyles[Math.floor(Math.random() * birdStyles.length)];
+              
+              birds.push({
+                x: Math.random() * (canvas.width - 100),
+                y: canvas.height - 20,
+                width: style.size,
+                height: style.size,
+                style: style,
+                state: selectedState,
+                collected: false,
+                velocity: { x: 0, y: 0 },
+                wingAngle: 0,
+                hopTimer: 0,
+                direction: Math.random() < 0.5 ? -1 : 1,
+                stateTimer: 0
+              });
             }
-        }
+          }
 
-        // 随机选择样式
-        const style = birdStyles[Math.floor(Math.random() * birdStyles.length)];
-        
-        birds.push({
-            x: Math.random() * (canvas.width - 100),
-            y: canvas.height - 20,
-            width: style.size,
-            height: style.size,
-            style: style,
-            state: selectedState,
-            collected: false,
-            velocity: { x: 0, y: 0 },
-            wingAngle: 0,
-            hopTimer: 0,
-            direction: Math.random() < 0.5 ? -1 : 1,
-            stateTimer: 0
-        });
-    }
-}
-
-        // 绘制扫把
-        function drawBroom() {
+          // 绘制扫把
+          function drawBroom() {
             ctx.save();
             ctx.translate(broom.x, broom.y);
             ctx.rotate(broom.angle);
@@ -162,7 +163,7 @@ const stateDistribution = {
             // 扫把毛
             ctx.fillStyle = '#D2691E';
             for (let i = -broom.width/2; i < broom.width/2; i += 4) {
-                ctx.fillRect(i, -broom.height/2, 2, broom.height + 10);
+              ctx.fillRect(i, -broom.height/2, 2, broom.height + 10);
             }
             
             // 扫把柄
@@ -170,11 +171,12 @@ const stateDistribution = {
             ctx.fillRect(-2, -broom.height/2 - 50, 4, 50);
             
             ctx.restore();
-        }
+          }
 
-        // 绘制簸箕和里面的小鸟
-        function drawDustpan() {
+          // 绘制簸箕和里面的小鸟
+          function drawDustpan() {
             ctx.save();
+            
             // 簸箕本体
             ctx.fillStyle = '#8B4513';
             ctx.beginPath();
@@ -187,173 +189,173 @@ const stateDistribution = {
 
             // 绘制簸箕中的小鸟
             dustpan.birds.forEach((bird, index) => {
-                const x = dustpan.x + 10 + (index % 3) * 25;
-                const y = dustpan.y + 5 + Math.floor(index / 3) * 25;
-                drawBird({
-                    ...bird,
-                    x: x,
-                    y: y,
-                    scale: 0.8
-                });
+              const x = dustpan.x + 10 + (index % 3) * 25;
+              const y = dustpan.y + 5 + Math.floor(index / 3) * 25;
+              drawBird({
+                ...bird,
+                x: x,
+                y: y,
+                scale: 0.8
+              });
             });
 
             ctx.restore();
-        }
+          }
 
-        // 绘制小鸟
-        function drawBird(bird) {
+          // 绘制小鸟
+          function drawBird(bird) {
             if (!bird.collected) {
-                ctx.save();
-                ctx.translate(bird.x + bird.width/2, bird.y + bird.height/2);
-                const scale = bird.scale || 1;
-                ctx.scale(scale * bird.direction, scale);
+              ctx.save();
+              ctx.translate(bird.x + bird.width/2, bird.y + bird.height/2);
+              const scale = bird.scale || 1;
+              ctx.scale(scale * bird.direction, scale);
 
-                // 小鸟身体
-                ctx.fillStyle = bird.style.bodyColor;
-                ctx.beginPath();
-                ctx.ellipse(0, 0, bird.width/2, bird.height/2 * 0.8, 0, 0, Math.PI * 2);
-                ctx.fill();
+              // 小鸟身体
+              ctx.fillStyle = bird.style.bodyColor;
+              ctx.beginPath();
+              ctx.ellipse(0, 0, bird.width/2, bird.height/2 * 0.8, 0, 0, Math.PI * 2);
+              ctx.fill();
 
-                // 翅膀
-                ctx.fillStyle = bird.style.wingColor;
-                ctx.save();
-                ctx.rotate(Math.sin(bird.wingAngle) * 0.3);
-                ctx.beginPath();
-                ctx.ellipse(bird.width/4, -bird.height/4, bird.width/3, bird.height/4, Math.PI/4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.restore();
+              // 翅膀
+              ctx.fillStyle = bird.style.wingColor;
+              ctx.save();
+              ctx.rotate(Math.sin(bird.wingAngle) * 0.3);
+              ctx.beginPath();
+              ctx.ellipse(bird.width/4, -bird.height/4, bird.width/3, bird.height/4, Math.PI/4, 0, Math.PI * 2);
+              ctx.fill();
+              ctx.restore();
 
-                // 头部
-                ctx.fillStyle = bird.style.bodyColor;
-                ctx.beginPath();
-                ctx.arc(-bird.width/3, -bird.height/4, bird.width/3, 0, Math.PI * 2);
-                ctx.fill();
+              // 头部
+              ctx.fillStyle = bird.style.bodyColor;
+              ctx.beginPath();
+              ctx.arc(-bird.width/3, -bird.height/4, bird.width/3, 0, Math.PI * 2);
+              ctx.fill();
 
-                // 眼睛
-                ctx.fillStyle = bird.style.eyeColor;
-                ctx.beginPath();
-                ctx.arc(-bird.width/2, -bird.height/4, 2, 0, Math.PI * 2);
-                ctx.fill();
+              // 眼睛
+              ctx.fillStyle = bird.style.eyeColor;
+              ctx.beginPath();
+              ctx.arc(-bird.width/2, -bird.height/4, 2, 0, Math.PI * 2);
+              ctx.fill();
 
-                // 嘴巴
-                ctx.fillStyle = bird.style.beakColor;
-                ctx.beginPath();
-                ctx.moveTo(-bird.width * 0.8, -bird.height/4);
-                ctx.lineTo(-bird.width * 0.8 - 8, -bird.height/4);
-                ctx.lineTo(-bird.width * 0.8, -bird.height/4 + 3);
-                ctx.fill();
+              // 嘴巴
+              ctx.fillStyle = bird.style.beakColor;
+              ctx.beginPath();
+              ctx.moveTo(-bird.width * 0.8, -bird.height/4);
+              ctx.lineTo(-bird.width * 0.8 - 8, -bird.height/4);
+              ctx.lineTo(-bird.width * 0.8, -bird.height/4 + 3);
+              ctx.fill();
 
-                // 腿
-                ctx.strokeStyle = '#FF8C00';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(0, bird.height/3);
-                ctx.lineTo(0, bird.height/2);
-                ctx.stroke();
+              // 腿
+              ctx.strokeStyle = '#FF8C00';
+              ctx.lineWidth = 2;
+              ctx.beginPath();
+              ctx.moveTo(0, bird.height/3);
+              ctx.lineTo(0, bird.height/2);
+              ctx.stroke();
 
-                ctx.restore();
+              ctx.restore();
             }
-        }
+          }
 
-        // 更新小鸟动画
-        function updateBirdAnimation(bird) {
-    if (!bird.collected) {
-        bird.wingAngle += 0.1;
-        bird.stateTimer += 1;
+          // 更新小鸟动画
+          function updateBirdAnimation(bird) {
+            if (!bird.collected) {
+              bird.wingAngle += 0.1;
+              bird.stateTimer += 1;
 
-        switch (bird.state) {
-            case birdStates.IDLE:
-                // 静止状态，偶尔改变方向
-                if (Math.random() < 0.01) {
+              switch (bird.state) {
+                case birdStates.IDLE:
+                  // 静止状态，偶尔改变方向
+                  if (Math.random() < 0.01) {
                     bird.direction *= -1;
-                }
-                break;
+                  }
+                  break;
 
-            case birdStates.HOPPING:
-                // 跳跃状态
-                if (bird.stateTimer > 30 && bird.velocity.y === 0) {
+                case birdStates.HOPPING:
+                  // 跳跃状态
+                  if (bird.stateTimer > 30 && bird.velocity.y === 0) {
                     bird.velocity.y = -3;
                     bird.stateTimer = 0;
-                }
-                break;
+                  }
+                  break;
 
-            case birdStates.RUNNING:
-                // 跑动状态
-                bird.x += bird.direction * 2;
-                if (bird.x < 0 || bird.x > canvas.width - bird.width) {
+                case birdStates.RUNNING:
+                  // 跑动状态
+                  bird.x += bird.direction * 2;
+                  if (bird.x < 0 || bird.x > canvas.width - bird.width) {
                     bird.direction *= -1;
-                }
-                break;
+                  }
+                  break;
 
-            case birdStates.FLYING:
-                // 起飞状态（被扫到时会自动触发）
-                if (bird.velocity.y === 0 && Math.random() < 0.05) {
+                case birdStates.FLYING:
+                  // 起飞状态（被扫到时会自动触发）
+                  if (bird.velocity.y === 0 && Math.random() < 0.05) {
                     bird.velocity.y = -5;
                     bird.velocity.x = bird.direction * 3;
-                }
-                break;
-        }
-    }
-}
-
-        // 扫把扫动效果
-        function sweep() {
-            if (isSweeping) {
-                broom.angle = Math.sin(sweepAngle) * 0.3;
-                sweepAngle += 0.2;
-                
-                // 推动小鸟
-                birds.forEach(bird => {
-                    if (!bird.collected) {
-                        let dx = broom.x - bird.x;
-                        let dy = broom.y - bird.y;
-                        let distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < broom.width) {
-                            bird.velocity.x = (dx / distance) * 3;
-                            bird.velocity.y = -1;
-                        }
-                    }
-                });
+                  }
+                  break;
+              }
             }
-        }
+          }
 
-        // 更新小鸟位置
-        function updateBirds() {
-            birds.forEach(bird => {
+          // 扫把扫动效果
+          function sweep() {
+            if (isSweeping) {
+              broom.angle = Math.sin(sweepAngle) * 0.3;
+              sweepAngle += 0.2;
+              
+              // 推动小鸟
+              birds.forEach(bird => {
                 if (!bird.collected) {
-                    bird.x += bird.velocity.x;
-                    bird.y += bird.velocity.y;
-                    
-                    // 重力效果
-                    bird.velocity.y += 0.1;
-                    
-                    // 地面碰撞
-                    if (bird.y > canvas.height - 20) {
-                        bird.y = canvas.height - 20;
-                        bird.velocity.y = 0;
-                        bird.velocity.x *= 0.8;
-                    }
-                    
-                    // 检查是否进入簸箕
-                    if (bird.x > dustpan.x && 
-                        bird.x < dustpan.x + dustpan.width && 
-                        bird.y > dustpan.y && 
-                        bird.y < dustpan.y + dustpan.height) {
-                        bird.collected = true;
-                        dustpan.birds.push({...bird});
-                        score++;
-                        scoreElement.textContent = '簸箕里的小鸟: ' + score;
-                    }
-
-                    // 更新动画
-                    updateBirdAnimation(bird);
+                  let dx = broom.x - bird.x;
+                  let dy = broom.y - bird.y;
+                  let distance = Math.sqrt(dx * dx + dy * dy);
+                  
+                  if (distance < broom.width) {
+                    bird.velocity.x = (dx / distance) * 3;
+                    bird.velocity.y = -1;
+                  }
                 }
-            });
-        }
+              });
+            }
+          }
 
-        // 游戏主循环
-        function gameLoop() {
+          // 更新小鸟位置
+          function updateBirds() {
+            birds.forEach(bird => {
+              if (!bird.collected) {
+                bird.x += bird.velocity.x;
+                bird.y += bird.velocity.y;
+                
+                // 重力效果
+                bird.velocity.y += 0.1;
+                
+                // 地面碰撞
+                if (bird.y > canvas.height - 20) {
+                  bird.y = canvas.height - 20;
+                  bird.velocity.y = 0;
+                  bird.velocity.x *= 0.8;
+                }
+                
+                // 检查是否进入簸箕
+                if (bird.x > dustpan.x && 
+                    bird.x < dustpan.x + dustpan.width && 
+                    bird.y > dustpan.y && 
+                    bird.y < dustpan.y + dustpan.height) {
+                  bird.collected = true;
+                  dustpan.birds.push({...bird});
+                  score++;
+                  scoreElement.textContent = '簸箕里的小鸟: ' + score;
+                }
+
+                // 更新动画
+                updateBirdAnimation(bird);
+              }
+            });
+          }
+
+          // 游戏主循环
+          function gameLoop() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             sweep();
@@ -365,51 +367,51 @@ const stateDistribution = {
             
             // 检查是否需要生成新的小鸟
             if (birds.every(bird => bird.collected)) {
-                birds = [];
-                createBirds();
+              birds = [];
+              createBirds();
             }
             
             requestAnimationFrame(gameLoop);
-        }
+          }
 
-        // 键盘控制
-        document.addEventListener('keydown', (event) => {
+          // 键盘控制
+          document.addEventListener('keydown', (event) => {
             switch(event.key) {
-                case 'ArrowLeft':
-                    if (broom.x > 0) broom.x -= broom.speed;
-                    break;
-                case 'ArrowRight':
-                    if (broom.x < canvas.width - broom.width) broom.x += broom.speed;
-                    break;
-                case ' ':
-                    isSweeping = true;
-                    break;
+              case 'ArrowLeft':
+                if (broom.x > 0) broom.x -= broom.speed;
+                break;
+              case 'ArrowRight':
+                if (broom.x < canvas.width - broom.width) broom.x += broom.speed;
+                break;
+              case ' ':
+                isSweeping = true;
+                break;
             }
-        });
+          });
 
-        document.addEventListener('keyup', (event) => {
+          document.addEventListener('keyup', (event) => {
             if (event.key === ' ') {
-                isSweeping = false;
-                broom.angle = 0;
+              isSweeping = false;
+              broom.angle = 0;
             }
-        });
+          });
 
-        // 移动端触摸控制
-        let touchStartX = 0;
-        canvas.addEventListener('touchstart', (event) => {
+          // 移动端触摸控制
+          let touchStartX = 0;
+          canvas.addEventListener('touchstart', (event) => {
             touchStartX = event.touches[0].clientX;
             isSweeping = true;
-        });
+          });
 
-        canvas.addEventListener('touchmove', (event) => {
+          canvas.addEventListener('touchmove', (event) => {
             const touch = event.touches[0];
             const dx = touch.clientX - touchStartX;
             touchStartX = touch.clientX;
             
             broom.x = Math.max(0, Math.min(canvas.width - broom.width, broom.x + dx));
-        });
+          });
 
-        canvas.addEventListener('touchend', () => {
+          canvas.addEventListener('touchend', () => {
             isSweeping = false;
             broom.angle = 0;
         });
