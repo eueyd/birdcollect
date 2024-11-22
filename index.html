@@ -29,12 +29,12 @@
           const canvas = document.getElementById('gameCanvas');
           const ctx = canvas.getContext('2d');
           const scoreElement = document.getElementById('score');
-
+          const BIRD_SPAWN_INTERVAL = 500; // 每500毫秒刷新一只小鸟
           // 游戏状态
           let score = 0;
           let sweepAngle = 0;
           let isSweeping = false;
-
+          let lastSpawnTime = 0;
           // 小鸟样式定义
           const birdStyles = [
             {   // 黄色系
@@ -343,19 +343,67 @@
                     bird.y > dustpan.y && 
                     bird.y < dustpan.y + dustpan.height) {
                   bird.collected = true;
-                  dustpan.birds.push({...bird});
-                  score++;
-                  scoreElement.textContent = '簸箕里的小鸟: ' + score;
-                }
+                  if (Math.random() < 0.5) { // 50%概率留在簸箕
+                      dustpan.birds.push({...bird});
+                      score++;
+                      scoreElement.textContent = '簸箕里的小鸟: ' + score;
+                  } else { // 50%概率飞走
+                      bird.state = birdStates.FLYING;
+                      bird.velocity.y = -8;
+                      bird.velocity.x = (Math.random() - 0.5) * 6;
+                      setTimeout(() => {
+                          const index = birds.indexOf(bird);
+                          if (index > -1) {
+                              birds.splice(index, 1);
+                          }
+                      }, 1000);
+                      // 更新动画
+                      updateBirdAnimation(bird);
+                  }
+                                 
+                  
+             
 
-                // 更新动画
-                updateBirdAnimation(bird);
+
+          function spawnNewBird() {
+              // 根据概率分布选择状态
+              let selectedState;
+              const random = Math.random() * 10;
+              let accumulator = 0;
+              for (const [state, probability] of Object.entries(stateDistribution)) {
+                  accumulator += probability;
+                  if (random < accumulator) {
+                      selectedState = state;
+                      break;
+                  }
               }
-            });
+              const style = birdStyles[Math.floor(Math.random() * birdStyles.length)];
+              birds.push({
+                  x: Math.random() * (canvas.width - 100),
+                  y: canvas.height - 20,
+                  width: style.size,
+                  height: style.size,
+                  style: style,
+                  state: selectedState,
+                  collected: false,
+                  velocity: { x: 0, y: 0 },
+                  wingAngle: 0,
+                  hopTimer: 0,
+                  direction: Math.random() < 0.5 ? -1 : 1,
+                  stateTimer: 0
+              });
           }
 
           // 游戏主循环
           function gameLoop() {
+
+            const currentTime = Date.now();
+  
+          // 每500ms刷新一只新小鸟
+            if (currentTime - lastSpawnTime > BIRD_SPAWN_INTERVAL && birds.length < BIRD_COUNT * 2) {
+                spawnNewBird();
+                lastSpawnTime = currentTime;
+            }
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             
             sweep();
@@ -373,6 +421,8 @@
             
             requestAnimationFrame(gameLoop);
           }
+
+        
 
           // 键盘控制
           document.addEventListener('keydown', (event) => {
